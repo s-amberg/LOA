@@ -1,12 +1,4 @@
 import { Utils } from "../utils"
-
-function main() {
-    const hostname = document.location.hostname ?? ""
-
-    switch (true) {
-        case  hostname.includes("loa-todo.com/engrave") : console.log("engraving site")
-    }
-}
   
 function storageName(storageName: string, id: number|string) {
     const intId = parseInt(id.toString()) + 1

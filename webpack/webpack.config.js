@@ -11,7 +11,6 @@ const title = 'LOA'
 module.exports = {
    mode: "production",
    entry: {
-      background: path.resolve(__dirname, "..", "src", "background.ts"),
       popup: path.resolve(__dirname, "..", "src", "popup/popup.ts"),
       content: path.resolve(__dirname, "..", "src", "content/content.ts"),
    },
@@ -46,7 +45,6 @@ module.exports = {
          patterns: [
             {from: "manifest.json", to: "manifest.json"},
             {from: "src/*/*.html", to: "[name].html"},
-            // {from: "src/*/*.css", to: "[name].css"},
             {from: "**/*", to: "images", context: path.resolve(__dirname, "..", "images")}
    ]
       }),
