@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <link rel="stylesheet" href="popup.css">
+  </head>
+  <body>
+    <form>
+      <div class="flex-horizontal d-flex">
+        <button class="reload" id="reload-button">&#x21bb;</button>
+        <select id="engraving-select" required></select>
+      </div>
+      
+      <button type="submit" id="import-button">Import Engraving</button>
+    </form>
+    <h2 class="btn" id="engravings-button">Show/Hide Engravings</h2>
+    <ul class="toggleable" id="engravings">
+    </ul>
+    <div class="flex-horizontal d-flex">
+      <button id="delete-button">delete</button>
+      <div class="btn">
+        <button type="submit" id="replace-button">replace</button>
+        <select id="add-select" required></select>
+      </div>
+
+    </div>
+    <script src="popup.js" ></script>
+  </body>
+</html>
