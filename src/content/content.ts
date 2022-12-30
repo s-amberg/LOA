@@ -10,13 +10,13 @@ chrome.runtime.onMessage.addListener( (request, sender, sendResponse) => {
     if(request.message === "engravings") {
         
         const engravings = Array.from(Array(request.engraveAmount).keys())
-            .map(id => Utils.parseJSON(localStorage.getItem(storageName(request.storageName, id))))
-            .filter(e => e != null && Utils.nonEmpty(e.name)) ?? []
-        sendResponse(engravings)
+            .map(id => Utils.parseJSON(localStorage.getItem(storageName(request.storageName, id)))) ?? []
+        sendResponse({engravings, status: "success"})
     }
     else if(request.message === "replace" && request.engraving != null) {
+
         localStorage.setItem(storageName(request.storageName, request.number), JSON.stringify(request.engraving));
-        sendResponse("success")
+        sendResponse({status: "success"})
     }
     else sendResponse({document, localStorage})
 })

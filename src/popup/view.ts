@@ -5,6 +5,9 @@ export class View {
     storageName = 'grave';
     engraveAmount = 6;
     engravings: Engrave[] = [];
+    hasWarning: boolean = false;
+
+    warningElement: HTMLElement|null;
     selectedEngraving: Engrave|undefined = undefined;
     engravingsElement: HTMLElement|null;
     addSelectElement: HTMLSelectElement|null;
@@ -14,6 +17,7 @@ export class View {
         this.engravingsElement = document.getElementById('engravings');
         this.engravingSelectElement = document.getElementById('engraving-select') as HTMLSelectElement;
         this.addSelectElement = document.getElementById('add-select') as HTMLSelectElement;
+        this.warningElement = document.getElementById('warning');
         this.getStoredEngravings(engravings => {
             this.engravings = engravings ?? [];
             this.render();
@@ -44,14 +48,50 @@ export class View {
 
     async updateEngravingOptions() {
         if(this.engravingSelectElement) this.engravingSelectElement.innerHTML = await this.getWebsiteEngravings().then(engravings => 
-            engravings.map((engraving, index) =>    
+
+            this.shownEngravings(engravings)?.filter(e => e != null && Utils.nonEmpty(e.name)).map((engraving, index) =>    
             `<option value="${engraving.name}">
                 ${Utils.engravingValue(engraving, index)}${Utils.engravingHead(engraving)}
             </option>`).join('\n'))
     }
 
-    getWebsiteEngravings(): Promise<Engrave[]> {
-        return Utils.sendMessage<Engrave[]>({message: "engravings", engraveAmount: this.engraveAmount, storageName: this.storageName})
+    async warningOrAction<T>(action: () => Promise<T>, validation?: () => true|string): Promise<string|T> {
+        const isValid = (validation ?? function(){return true}) ();
+        if(typeof isValid == "boolean" || this.hasWarning) {
+            this.hasWarning = false;
+            this.showWarning('');
+            try {
+                return await action();
+            } catch (e) {
+                this.hasWarning = true;
+                return (typeof e == "string") ? this.showWarning(e) : Promise.reject(e);
+            }
+        }
+        else {
+            this.hasWarning = true;
+            this.showWarning(isValid);
+            setTimeout(() => {
+                this.hasWarning = false;
+                this.showWarning('');
+            }, 5000)
+            return Promise.resolve(isValid)
+        }
+    }
+
+    showWarning(warning: string): string {
+        if(this.warningElement) {
+            return this.warningElement.innerHTML = warning;
+        }
+        else return ''
+    }
+
+    async getWebsiteEngravings(): Promise<Engrave[]> {
+        const e = await Utils.sendMessage<{ engravings: Engrave[]; }>({ message: "engravings" }, this.engraveAmount, this.storageName);
+        return e.engravings;
+    }
+
+    shownEngravings(engravings: Engrave[]) {
+        return engravings?.filter(e => e != null && Utils.nonEmpty(e.name)) ?? []
     }
     
     getStoredEngravings(callback: (e: Engrave[]|undefined) => void) {
@@ -73,8 +113,8 @@ export class View {
     
     async saveEngraving(value: string|number|undefined) {
         if(value == null) return
-        const engravings = await this.getWebsiteEngravings()
-        const toSave = engravings.find(engraving => engraving.name === value.toString());
+        const engravings = await this.getWebsiteEngravings();
+        const toSave = this.shownEngravings(engravings).find(engraving => engraving.name === value.toString());
         if(toSave == null) return
 
         const maybeExisting = this.engravings.map(e => e.name).indexOf(toSave.name);
@@ -94,13 +134,23 @@ export class View {
         }
     }
 
-    replaceEngraving() {
-        const toReplaceNr = this.addSelectElement?.value
-        Utils.sendMessage({message: "replace", engraving: this.selectedEngraving, number: toReplaceNr, storageName: this.storageName}).then(e => 
-            
-            chrome.tabs.query({active: true, currentWindow: true}, function(tabs) {
-                var code = 'window.location.reload();';
-                chrome.tabs.executeScript(tabs[0].id ?? -1,  {code: code});
-            })
-    )}
+    async replaceEngraving() {
+        const toReplaceNr = parseInt(this.addSelectElement?.value ?? '');
+        const engravings = await this.getWebsiteEngravings();
+    
+        const validation = () => {
+            const toReplace = engravings[toReplaceNr];
+            const maybeExisting = this.engravings.find(e => e.name == toReplace.name);
+            return maybeExisting ? true : "selected engraving has not yet been imported, click again to continue"
+        }
+
+        const action = () => Utils.sendMessage({message: "replace", engraving: this.selectedEngraving, number: toReplaceNr}, this.engraveAmount, this.storageName).then(e => 
+            chrome.tabs.query({active: true, currentWindow: true}).then(tabs => {
+                chrome.scripting.executeScript({func: () => window.location.reload(), target: {tabId: tabs[0].id ?? -1}}).then(result =>  {
+                    console.info(result);
+                })
+            }))
+
+        return this.warningOrAction(action, validation)
+    }
 }

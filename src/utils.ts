@@ -1,14 +1,15 @@
-import { Engrave } from "./content/engraving";
+import { Engrave } from "./popup/engraving";
 
 export class Utils {
 
-    static sendMessage<T>(message: Object): Promise<T> {
+    static sendMessage<T>(message: Object, engraveAmount: number, storageName: string): Promise<T> {
         return new Promise<T>((resolve, reject) => {
             try {
                 chrome.tabs.query({active: true, currentWindow: true}, function(tabs) {
 
-                chrome.tabs.sendMessage(tabs[0].id ?? -1,  message, function(response) {
-                    resolve(response);
+                chrome.tabs.sendMessage(tabs[0].id ?? -1, Object.assign({engraveAmount, storageName}, message), function(response) {
+                    if(response.status == "success") resolve(response) 
+                    else reject(response);
                 });
               });
             }
