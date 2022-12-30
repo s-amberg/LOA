@@ -5,7 +5,7 @@ export class View {
     storageName = 'grave';
     engraveAmount = 6;
     engravings: Engrave[] = [];
-    hasWarning: boolean = false;
+    warning: string|undefined = undefined;
 
     warningElement: HTMLElement|null;
     selectedEngraving: Engrave|undefined = undefined;
@@ -55,32 +55,32 @@ export class View {
             </option>`).join('\n'))
     }
 
-    async warningOrAction<T>(action: () => Promise<T>, validation?: () => true|string): Promise<string|T> {
+    async warningOrAction<T>(key: string, action: () => Promise<T>, validation?: () => true|string): Promise<string|T> {
         const isValid = (validation ?? function(){return true}) ();
-        if(typeof isValid == "boolean" || this.hasWarning) {
-            this.hasWarning = false;
-            this.showWarning('');
+        if(typeof isValid === "boolean" || this.warning === key) {
+            this.warning = undefined;
+            this.showWarning(undefined);
             try {
                 return await action();
             } catch (e) {
-                this.hasWarning = true;
+                this.warning = key;
                 return (typeof e == "string") ? this.showWarning(e) : Promise.reject(e);
             }
         }
         else {
-            this.hasWarning = true;
+            this.warning = key;
             this.showWarning(isValid);
             setTimeout(() => {
-                this.hasWarning = false;
-                this.showWarning('');
+                this.warning = undefined;
+                this.showWarning(undefined);
             }, 5000)
             return Promise.resolve(isValid)
         }
     }
 
-    showWarning(warning: string): string {
+    showWarning(warning: string|undefined): string {
         if(this.warningElement) {
-            return this.warningElement.innerHTML = warning;
+            return this.warningElement.innerHTML = warning ?? '';
         }
         else return ''
     }
@@ -102,9 +102,12 @@ export class View {
     }
 
     selectEngraving(event: Event) {
-        this.document.getElementById(this.selectedEngraving?.name ?? "")?.classList.remove("selected");
-        this.selectedEngraving = this.engravings.find(e => e.name === (event.target as HTMLElement)?.id);
-        (event.target as HTMLElement)?.classList.add("selected");
+        this.warningOrAction('select', () => {
+            this.document.getElementById(this.selectedEngraving?.name ?? "")?.classList.remove("selected");
+            this.selectedEngraving = this.engravings.find(e => e.name === (event.target as HTMLElement)?.id);
+            (event.target as HTMLElement)?.classList.add("selected");
+            return Promise.resolve(this.selectEngraving)
+        })
     }
     
     saveEngravings(callback?: () => void) {
@@ -151,6 +154,6 @@ export class View {
                 })
             }))
 
-        return this.warningOrAction(action, validation)
+        return this.warningOrAction('replace', action, validation)
     }
 }
