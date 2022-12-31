@@ -3,7 +3,7 @@
   "browser_specific_settings":{
     "gecko": {
       "id": "2@s-amberg",
-      "strict_min_version": "57.0"
+      "strict_min_version": "101"
     }
   },
   "name": "loa extensions",

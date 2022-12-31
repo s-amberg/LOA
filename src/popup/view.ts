@@ -110,8 +110,8 @@ export class View {
         })
     }
     
-    saveEngravings(callback?: () => void) {
-        return chrome.storage.local.set({[this.storageName]: JSON.stringify(this.engravings)}, callback ? () => callback() : undefined)
+    async saveEngravings(): Promise<void> {
+        return chrome.storage.local.set({ [this.storageName]: JSON.stringify(this.engravings) });
     }
     
     async saveEngraving(value: string|number|undefined) {
@@ -120,20 +120,29 @@ export class View {
         const toSave = this.shownEngravings(engravings).find(engraving => engraving.name === value.toString());
         if(toSave == null) return
 
-        const maybeExisting = this.engravings.map(e => e.name).indexOf(toSave.name);
-        if(maybeExisting === -1) {
-            this.engravings.push(toSave)
+        const validation = () => {
+            const maybeExisting = this.engravings.find(e => e.name == toSave.name)
+            return maybeExisting == null || 'the imported engraving already exists, it will overwrite, click again to continue or change the name';
         }
-        else {
-            this.engravings[maybeExisting] = toSave;
+
+        const action = () => {
+            const maybeIndex = this.engravings.map(e => e.name).indexOf(toSave.name);
+            if(maybeIndex === -1) {
+                this.engravings.push(toSave)
+            }
+            else {
+                this.engravings[maybeIndex] = toSave;
+            }
+            return this.saveEngravings()
         }
-        return this.saveEngravings()
+
+        return this.warningOrAction<void>('save', action, validation);
     }
 
     deleteEngraving() {
         if(this.selectedEngraving?.name) {
             this.engravings = this.engravings.filter(e => e.name && (e.name !== this.selectedEngraving?.name));
-            this.saveEngravings(() => this.updateSaved())
+            this.saveEngravings().then(e => this.updateSaved())
         }
     }
 
