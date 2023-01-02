@@ -2,6 +2,7 @@ import { Utils } from "../utils";
 import { Engrave } from "./engraving";
 
 export class View {
+    //TODO: make import export functionality
     storageName = 'grave';
     engraveAmount = 6;
     engravings: Engrave[] = [];

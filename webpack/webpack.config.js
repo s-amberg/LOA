@@ -1,12 +1,13 @@
 const path = require('path');
 const CopyPlugin = require('copy-webpack-plugin');
-const Crx = require("crx-webpack-plugin");
 const ZipPlugin = require('zip-webpack-plugin');
+const manifest = require('../manifest.json');
 
 const outDir = path.resolve(__dirname, 'dist');
 const srcDir = path.resolve(__dirname, 'src');
 const nodeModulesDir = path.resolve(__dirname, 'node_modules');
 const title = 'LOA'
+const version = manifest.version
 
 module.exports = {
    mode: "production",
@@ -48,16 +49,10 @@ module.exports = {
             {from: "**/*", to: "images", context: path.resolve(__dirname, "..", "images")}
    ]
       }),
-      new Crx({
-         keyFile: 'key.pem',
-         contentPath: path.join(__dirname, "../build"),
-         outputPath: path.join(__dirname, "../dist"),
-         name: title
-       }),
 
        new ZipPlugin({
          path: path.join(__dirname, "../dist"),
-         filename: `${title}.zip`,
+         filename: `${title}_${version}.zip`,
          extension: 'xpi',
        })
    ],

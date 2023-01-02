@@ -3,12 +3,12 @@
   "browser_specific_settings":{
     "gecko": {
       "id": "2@s-amberg",
-      "strict_min_version": "101"
+      "strict_min_version": "101.0"
     }
   },
   "name": "loa extensions",
-  "description": "enables various interactions and enhancements for lost ark websites",
-  "version": "1.0",
+  "description": " allows you to use an almost unlimited amount of engravings on load-todo.com",
+  "version": "1.0.1",
   
   "permissions": [
       "activeTab",
