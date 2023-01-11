@@ -1,0 +1,5 @@
+node version 16.14.0
+npm version 8.3.1
+
+run build script with "npm run build"
+the .xpi file used for firefox can be found in the dist folder
